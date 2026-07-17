@@ -1,0 +1,680 @@
+VPATH=@srcdir@
+build_alias=@build_alias@
+build_vendor=@build_vendor@
+build_os=@build_os@
+build=@build@
+host_alias=@host_alias@
+host_vendor=@host_vendor@
+host_os=@host_os@
+host=@host@
+target_alias=@target_alias@
+target_vendor=@target_vendor@
+target_os=@target_os@
+target_cpu=@target_cpu@
+target=@target@
+program_transform_name = @program_transform_name@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+srcdir = @srcdir@
+abs_srcdir = @abs_srcdir@
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+includedir = @includedir@
+oldincludedir = @oldincludedir@
+infodir = @infodir@
+datarootdir = @datarootdir@
+docdir = @docdir@
+pdfdir = @pdfdir@
+htmldir = @htmldir@
+mandir = @mandir@
+builddir = @builddir@
+abs_builddir = @abs_builddir@
+INSTALL=@INSTALL@
+INSTALL:=@INSTALL@
+INSTALL_DATA:=@INSTALL_DATA@
+TOPLEVEL_CONFIGURE_ARGUMENTS:=@TOPLEVEL_CONFIGURE_ARGUMENTS@
+baseargs = @baseargs@
+host_baseargs = @host_baseargs@
+GCC_MIN_VERSION_4_3_0:=@GCC_MIN_VERSION_4_3_0@
+GCC_MIN_VERSION_4_5_0:=@GCC_MIN_VERSION_4_5_0@
+GCC_MIN_VERSION_4_8_0:=@GCC_MIN_VERSION_4_8_0@
+GCC_POST_VERSION_4_X:=@GCC_POST_VERSION_4_X@
+GDB_MIN_VERSION_7_2:=@GDB_MIN_VERSION_7_2@
+BINUTILS_MIN_VERSION_2_21:=@BINUTILS_MIN_VERSION_2_21@
+GOLD_MIN_VERSION_2_21:=@GOLD_MIN_VERSION_2_21@
+CLOOG_BACKEND:=@CLOOG_BACKEND@
+ENABLE_GRAPHITE:=@ENABLE_GRAPHITE@
+PACKAGE_TO_SRCDIR:=@package_to_srcdir@
+BUILD_ANDROID_GCC:=@BUILD_ANDROID_GCC@
+GDB_TARGET:=@GDB_TARGET@
+BINUTILS_VERSION=binutils-@BINUTILS_VERSION@
+GOLD_VERSION=binutils-@GOLD_VERSION@
+GCC_VERSION=gcc-@GCC_VERSION@
+NEWLIB_VERSION=newlib-@NEWLIB_VERSION@
+GMP_VERSION=gmp-@GMP_VERSION@
+MPFR_VERSION=mpfr-@MPFR_VERSION@
+MPC_VERSION=mpc-@MPC_VERSION@
+PPL_VERSION=ppl-@PPL_VERSION@
+CLOOG_VERSION=cloog-@CLOOG_VERSION@
+ISL_VERSION=isl-@ISL_VERSION@
+GDB_VERSION=gdb-@GDB_VERSION@
+EXPAT_VERSION=expat-@EXPAT_VERSION@
+WITH_PYTHON=@WITH_PYTHON@
+HAVE_MPC=@have_mpc@
+HAVE_MPFR=@have_mpfr@
+HAVE_GMP=@have_gmp@
+HAVE_PPL=@have_ppl@
+HAVE_CLOOG=@have_cloog@
+HAVE_ISL=@have_isl@
+HAVE_EXPAT=@have_expat@
+ENABLE_GOLD=@enable_gold@
+ENABLE_LD_DEFAULT=@enable_ld_default@
+STAMP=touch
+MAKEFLAGS+=-j$(NUM_JOBS)
+TARGET_BINUTILS_BUILDDIR=$(abs_builddir)/$(BINUTILS_VERSION)
+TARGET_GCC_BUILDDIR=$(abs_builddir)/$(GCC_VERSION)
+TEMP_INSTALLDIR=$(abs_builddir)/temp-install
+ifeq ($(HAVE_MPC),no)
+  MPC_DIR=$(TEMP_INSTALLDIR)
+endif
+ifeq ($(HAVE_MPFR),no)
+  MPFR_DIR=$(TEMP_INSTALLDIR)
+endif
+ifeq ($(HAVE_GMP),no)
+  GMP_DIR=$(TEMP_INSTALLDIR)
+endif
+ifeq ($(HAVE_PPL), no)
+  PPL_DIR=$(TEMP_INSTALLDIR)
+endif
+ifeq ($(HAVE_CLOOG), no)
+  CLOOG_DIR=$(TEMP_INSTALLDIR)
+endif
+ifeq ($(HAVE_ISL), no)
+  ISL_DIR=$(TEMP_INSTALLDIR)
+endif
+ifeq ($(HAVE_EXPAT),no)
+  EXPAT_DIR=$(TEMP_INSTALLDIR)
+endif
+ifneq ($(WITH_PYTHON),)
+  WITH_PYTHON:=--with-python=$(WITH_PYTHON)
+endif
+FIND_TARGET_LD=\
+	`[ -d $(TARGET_BINUTILS_BUILDDIR)/gold ] && echo "gold" || echo "ld"`
+TARGET_BINUTILS_EXPORTS= \
+export	AS_FOR_TARGET=$(TARGET_BINUTILS_BUILDDIR)/gas/as-new \
+	LD_FOR_TARGET=$(TARGET_BINUTILS_BUILDDIR)/$(FIND_TARGET_LD)/ld-new \
+	AR_FOR_TARGET=$(TARGET_BINUTILS_BUILDDIR)/binutils/ar \
+	NM_FOR_TARGET=$(TARGET_BINUTILS_BUILDDIR)/binutils/nm-new \
+	STRIP_FOR_TARGET=$(TARGET_BINUTILS_BUILDDIR)/binutils/strip-new \
+	RANLIB_FOR_TARGET=$(TARGET_BINUTILS_BUILDDIR)/binutils/ranlib \
+	OBJDUMP_FOR_TARGET=$(TARGET_BINUTILS_BUILDDIR)/binutils/objdump \
+	READELF_FOR_TARGET=$(TARGET_BINUTILS_BUILDDIR)/binutils/readelf
+TARGET_MINIMAL_GCC_EXPORTS= \
+export	CC_FOR_TARGET="$(TARGET_GCC_BUILDDIR)/gcc/xgcc \
+		      -B $(TARGET_GCC_BUILDDIR)/gcc \
+		      -isystem $(TARGET_GCC_BUILDDIR)/gcc/include-fixed \
+		      -isystem $(TARGET_GCC_BUILDDIR)/gcc/include"
+CFLAGS_FOR_TARGET+= -O2 -Os -g
+CXXFLAGS_FOR_TARGET+=$(CFLAGS_FOR_TARGET)
+LDFLAGS_FOR_TARGET=
+prefix-list = $(foreach e, $(2), $(join $1, $e))
+find-package-srcdir = $(shell \
+  if [ -f $(srcdir)/../$(firstword $(subst -, ,$1))/$(strip $1)/configure ]; then \
+     echo $(PACKAGE_TO_SRCDIR)/../$(firstword $(subst -, ,$1))/$(strip $1); \
+  elif [ -f $(abs_builddir)/temp-src/$(strip $1)/configure ]; then \
+    echo $(abs_builddir)/temp-src/$(strip $1) ; \
+  else \
+    echo 'error cannot find $(strip $1)' ; \
+  fi)
+find-git-hash = $(shell \
+  git -C $1 log -1 --pretty=format:%h 2>/dev/null || echo unknown-git-ver)
+ifneq ($(build_alias),)
+cur_build := $(build_alias)
+else
+cur_build := $(build)
+endif
+ifneq ($(host_alias),)
+cur_host := $(host_alias)
+else
+cur_host := $(host)
+endif
+ifneq ($(target_alias),)
+cur_target := $(target_alias)
+else
+cur_target := $(target)
+endif
+ifneq ($(cur_host),$(cur_build))
+CFLAGS_FOR_BUILD ?= $(CFLAGS)
+LDFLAGS_FOR_BUILD ?= $(LDFLAGS)
+canadian_build_env := \
+	export CC_FOR_BUILD=$(cur_build)-gcc ; \
+	export CXX_FOR_BUILD=$(cur_build)-g++ ; \
+	export CC=$(cur_build)-gcc ; \
+	export CXX=$(cur_build)-g++ ; \
+	export CFLAGS="$(CFLAGS_FOR_BUILD)" ; \
+	export LDFLAGS="$(LDFLAGS_FOR_BUILD)" ;
+CANADIAN_ROOT := $(PWD)/host-${cur_build}
+canadian_env := \
+	export CC_FOR_BUILD=$(cur_build)-gcc ; \
+	export CXX_FOR_BUILD=$(cur_build)-g++ ; \
+	export CC=$(cur_host)-gcc ; \
+	export CXX=$(cur_host)-g++ ; \
+	export AR=$(cur_host)-ar ; \
+	export RANLIB=$(cur_host)-ranlib ; \
+	export PATH="$(CANADIAN_ROOT)/install/bin:${PATH}" ;
+endif
+.PHONY: all clean
+all: build
+ifeq ($(ENABLE_GRAPHITE),yes)
+build: install-host-cloog
+endif
+build: build-target-binutils build-target-gcc \
+	build-target-gdb
+install: install-target-binutils install-target-gcc \
+	install-target-gdb
+ifneq ($(cur_host),$(cur_build))
+.PHONY: config-canadian-tools build-canadian-tools install-canadian-tools
+config-canadian-tools: stmp-config-canadian-tools
+stmp-config-canadian-tools:
+	([ -d $(CANADIAN_ROOT) ] || \
+	  mkdir $(CANADIAN_ROOT)) && \
+	($(canadian_build_env) \
+	 cd $(CANADIAN_ROOT) && \
+	 $(abs_srcdir)/configure $(baseargs) --with-gdb-version=none --build=$(cur_build) \
+		--host=$(cur_build) --target=$(cur_target) --prefix=$(CANADIAN_ROOT)/install) && \
+	$(STAMP) $@
+build-canadian-tools: stmp-build-canadian-tools
+stmp-build-canadian-tools: stmp-config-canadian-tools
+	($(canadian_build_env) \
+	 cd $(CANADIAN_ROOT) && \
+	 $(MAKE)) && \
+	$(STAMP) $@
+install-canadian-tools: stmp-install-canadian-tools
+stmp-install-canadian-tools: stmp-build-canadian-tools
+	($(canadian_build_env) \
+	 cd $(CANADIAN_ROOT) && \
+	 $(MAKE) -j1 install) && \
+	$(STAMP) $@
+gcc_build_target := all-gcc
+gcc_install_target := install-gcc
+install-target-gcc-multilibs: stmp-install-canadian-tools
+	mkdir -p $(prefix)/lib/gcc/
+	rsync -a $(CANADIAN_ROOT)/install/lib/gcc/ $(prefix)/lib/gcc/
+install-target-gcc-multilibs := install-target-gcc-multilibs
+canadian_stmp := stmp-install-canadian-tools
+else
+gcc_build_target :=
+gcc_install_target := install
+install-target-gcc-multilibs :=
+canadian_stmp :=
+endif
+ifneq ($(BINUTILS_VERSION), $(GOLD_VERSION))
+build: build-target-gold
+install: install-target-gold
+endif
+.PHONY: config-target-binutils build-target-binutils install-target-binutils
+config-target-binutils: stmp-config-target-binutils
+BINUTILS_CONFIG_ARGS=--prefix=$(prefix) \
+	--target=${cur_target} --host=${cur_host} --build=${cur_build} \
+	$(baseargs) --disable-shared --disable-nls \
+	--with-pkgversion=$(BINUTILS_VERSION)-$(call find-git-hash, $(srcdir)/../binutils)
+ifeq ($(ENABLE_GRAPHITE),yes)
+BINUTILS_CONFIG_ARGS+= --with-cloog=${CLOOG_DIR} --with-isl=${ISL_DIR} --with-gmp=${GMP_DIR} \
+	--disable-ppl-version-check --disable-cloog-version-check --disable-isl-version-check $(CLOOG_BACKEND)
+ifneq ($(host_os),darwin)
+BINUTILS_CONFIG_ARGS+= \
+	'--with-host-libstdcxx=-static-libgcc -Wl,-Bstatic,-lstdc++,-Bdynamic -lm' \
+         --enable-install-libbfd
+ifneq ($(cur_host),$(cur_build))
+BINUTILS_CONFIG_ARGS+= \
+	 --with-gold-ldflags='-static-libgcc -static-libstdc++ -static'
+else
+BINUTILS_CONFIG_ARGS+= \
+	 --with-gold-ldflags='-static-libgcc -static-libstdc++'
+endif
+else
+GCC_CONFIG_ARGS += '--with-host-libstdcxx=-static-libgcc -lstdc++ -lm'
+endif
+endif
+ifneq ($(ENABLE_GOLD),)
+ifeq ($(BINUTILS_MIN_VERSION_2_21),yes)
+ifeq ($(ENABLE_LD_DEFAULT),)
+BINUTILS_CONFIG_ARGS += --enable-gold=default
+endif
+else
+ifeq ($(ENABLE_LD_DEFAULT),)
+BINUTILS_CONFIG_ARGS += --enable-gold=both/gold
+else
+BINUTILS_CONFIG_ARGS += --enable-gold=both/ld
+endif
+endif
+endif
+stmp-config-target-binutils: config.status stmp-install-host-ppl stmp-install-host-isl $(canadian_stmp)
+	([ -d ${BINUTILS_VERSION} ] || \
+	  mkdir ${BINUTILS_VERSION}) && \
+	($(canadian_env) \
+	 cd ${BINUTILS_VERSION} ; \
+	 $(call find-package-srcdir, ${BINUTILS_VERSION})/configure \
+	  $(BINUTILS_CONFIG_ARGS)) && \
+	$(STAMP) $@
+build-target-binutils: stmp-build-target-binutils
+stmp-build-target-binutils: stmp-config-target-binutils
+	($(canadian_env) \
+	 $(MAKE) -C ${BINUTILS_VERSION}) && $(STAMP) $@
+install-target-binutils: stmp-build-target-binutils
+	($(canadian_env) \
+	 $(MAKE) -C ${BINUTILS_VERSION} install)
+ifneq ($(BINUTILS_VERSION), $(GOLD_VERSION))
+.PHONY: config-target-gold build-target-gold install-target-gold
+config-target-gold: stmp-config-target-gold
+GOLD_CONFIG_ARGS=--prefix=$(prefix) \
+	--target=${target_alias} --host=${host} --build=${build} \
+	$(baseargs) --disable-shared
+ifeq ($(GOLD_MIN_VERSION_2_21),yes)
+	GOLD_CONFIG_ARGS += --enable-gold=default
+else
+	GOLD_CONFIG_ARGS += --enable-gold=both/gold
+endif
+stmp-config-target-gold: config.status
+	([ -d ${GOLD_VERSION} ] || \
+	  mkdir ${GOLD_VERSION}) && \
+	(cd ${GOLD_VERSION} ; \
+	 $(call find-package-srcdir, ${GOLD_VERSION})/configure \
+	  $(GOLD_CONFIG_ARGS)) && \
+	$(STAMP) $@
+build-target-gold: stmp-build-target-gold
+stmp-build-target-gold: stmp-config-target-gold
+	($(canadian_env) \
+     $(MAKE) -C ${GOLD_VERSION} && $(STAMP) $@)
+install-target-gold: stmp-build-target-gold install-target-binutils
+	($(canadian_env) \
+     make -C $(GOLD_VERSION)/gold install)
+endif
+.PHONY: config-target-gcc build-target-gcc install-target-gcc
+.PHONY: install-target-gcc-gcc $(install-target-gcc-multilibs)
+config-target-gcc: stmp-config-target-gcc
+GCC_CONFIG_ARGS=--prefix=$(prefix) \
+	  --target=${cur_target} --host=${cur_host} --build=${cur_build} \
+	  --with-gnu-as --with-gnu-ld --enable-languages=c,c++
+ifeq ($(GCC_MIN_VERSION_4_3_0),yes)
+stmp-config-target-gcc: stmp-install-host-gmp stmp-install-host-mpfr
+GCC_CONFIG_ARGS += --with-gmp=$(GMP_DIR) --with-mpfr=$(MPFR_DIR)
+endif
+ifeq ($(GCC_MIN_VERSION_4_5_0),yes)
+stmp-config-target-gcc: stmp-install-host-mpc
+GCC_CONFIG_ARGS += --with-mpc=$(MPC_DIR)
+endif
+GCC_CONFIG_ARGS += --with-cloog=${CLOOG_DIR} --with-isl=${ISL_DIR} --with-ppl=${PPL_DIR} \
+	--disable-ppl-version-check --disable-cloog-version-check --disable-isl-version-check $(CLOOG_BACKEND)
+ifeq ($(host_os),darwin)
+    HOST_LIBSTDCXX := -static-libgcc -lstdc++ -lm
+else ifneq ($(cur_host),$(cur_build))
+    HOST_LIBSTDCXX := -static-libgcc -static-libstdc++ -lstdc++ -lm -static
+else
+    HOST_LIBSTDCXX := -static-libgcc -Wl,-Bstatic,-lstdc++,-Bdynamic -lm
+endif
+GCC_CONFIG_ARGS += '--with-host-libstdcxx=$(HOST_LIBSTDCXX)'
+ifeq ($(BUILD_ANDROID_GCC),yes)
+GCC_CONFIG_ARGS += $(GCC_CONFIG_LIBSTDCXX_V3) --disable-libssp \
+	--enable-threads --disable-nls --disable-libmudflap --disable-libgomp \
+	--disable-libstdc__-v3 --disable-sjlj-exceptions --disable-shared \
+	--disable-tls --disable-libitm
+CFLAGS_FOR_TARGET += -DTARGET_POSIX_IO -fno-short-enums
+ifeq ($(target_cpu),i686)
+GCC_CONFIG_ARGS += --with-arch=i686 --with-tune=intel --with-fpmath=sse
+endif
+ifeq ($(target_cpu),x86_64)
+GCC_CONFIG_ARGS += --with-arch=x86-64 --with-tune=intel --with-fpmath=sse \
+                   --with-multilib-list=m32,m64
+endif
+# ARM specific options.
+ifeq ($(target_cpu),arm)
+GCC_CONFIG_ARGS += --with-float=soft --with-fpu=vfp --with-arch=armv5te \
+	--enable-target-optspace
+ifneq ($(target_os),linux-androideabi)
+GCC_CONFIG_ARGS += --with-abi=aapcs
+endif
+endif
+endif
+# We add the baseargs and the end so that they override any default args
+GCC_CONFIG_ARGS += $(baseargs)
+# Add user specified --enable-gold=xxx option to gcc
+ifneq ($(ENABLE_GOLD),)
+GCC_CONFIG_ARGS += $(ENABLE_GOLD)
+endif
+# We have to add -mandroid in target CFLAGS and CXXFLAGS
+stmp-config-target-gcc: config.status stmp-install-host-ppl stmp-install-host-isl stmp-install-host-cloog stmp-build-target-binutils
+	([ -d ${GCC_VERSION} ] || \
+	  mkdir ${GCC_VERSION}) && \
+	($(canadian_env) \
+	 cd ${GCC_VERSION} ; \
+	 $(TARGET_BINUTILS_EXPORTS) ; \
+	 export CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" ; \
+	 export CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" ; \
+	 export LDFLAGS_FOR_TARGET="$(LDFLAGS_FOR_TARGET)" ; \
+	 $(call find-package-srcdir, ${GCC_VERSION})/configure \
+	   $(GCC_CONFIG_ARGS)) && \
+	$(STAMP) $@
+build-target-gcc: stmp-build-target-gcc
+stmp-build-target-gcc: stmp-config-target-gcc install-target-binutils
+	($(canadian_env) \
+	 $(MAKE) -C ${GCC_VERSION} \
+		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
+		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
+		LDFLAGS_FOR_TARGET="$(LDFLAGS_FOR_TARGET)" \
+		$(gcc_build_target)) \
+	&& $(STAMP) $@
+install-target-gcc-gcc: stmp-build-target-gcc
+	($(canadian_env) \
+	 $(MAKE) -C ${GCC_VERSION} $(gcc_install_target))
+install-target-gcc: install-target-gcc-gcc $(install-target-gcc-multilibs)
+.PHONY: build-target-minimal-gcc install-target-minimal-gcc
+ifeq ("$(GCC_MIN_VERSION_4_3_0)","yes")
+MINIMAL_GCC_BUILD_TARGETS:= gcc target-libgcc
+else
+MINIMAL_GCC_BUILD_TARGETS:= gcc
+endif
+build-target-minimal-gcc: stmp-build-target-minimal-gcc
+stmp-build-target-minimal-gcc: stmp-config-target-gcc
+	($(canadian_env) \
+	 $(MAKE) -C ${GCC_VERSION} \
+		$(call prefix-list, all-, $(MINIMAL_GCC_BUILD_TARGETS))) && \
+	$(STAMP) $@
+install-target-minimal-gcc: stmp-build-target-minimal-gcc
+	($(canadian_env) \
+	 $(MAKE) -C ${GCC_VERSION} \
+		$(call prefix-list, install-, $(MINIMAL_GCC_BUILD_TARGETS)))
+.PHONY: config-target-newlib build-target-newlib install-target-newlib
+config-target-newlib: stmp-config-target-newlib
+NEWLIB_CONFIG_ARGS=$(baseargs) --prefix=$(prefix) \
+	  --target=${cur_target} --host=${cur_host} --build=${cur_build}
+stmp-config-target-newlib: stmp-build-target-binutils \
+			   stmp-build-target-minimal-gcc
+	([ -d ${NEWLIB_VERSION} ] || \
+	  mkdir ${NEWLIB_VERSION}) && \
+	($(canadian_env) \
+	 cd ${NEWLIB_VERSION} ; \
+	 $(TARGET_BINUTILS_EXPORTS) ; \
+	 $(TARGET_MINIMAL_GCC_EXPORTS) ; \
+	 $(call find-package-srcdir, ${NEWLIB_VERSION})/configure \
+	  $(NEWLIB_CONFIG_ARGS)) && \
+	$(STAMP) $@
+stmp-build-target-newlib: stmp-config-target-newlib
+	($(canadian_env) \
+	 $(MAKE) -C ${NEWLIB_VERSION}) && $(STAMP) $@
+install-target-newlib: stmp-build-target-newlib
+	($(canadian_env) \
+	 $(MAKE) -C ${NEWLIB_VERSION} install)
+# host gmp rules
+.PHONY: config-host-gmp build-host-gmp install-host-gmp
+config-host-gmp: stmp-config-host-gmp
+GMP_CONFIG_ARGS=$(host_baseargs) --prefix=$(TEMP_INSTALLDIR) --disable-shared \
+	  --host=${cur_host} --build=${cur_build}
+ifeq ($(ENABLE_GRAPHITE),yes)
+GMP_CONFIG_ARGS+= --enable-cxx
+endif
+stmp-config-host-gmp: config.status $(canadian_stmp)
+	([ -d ${GMP_VERSION} ] || \
+	  mkdir ${GMP_VERSION}) && \
+	($(canadian_env) \
+	 cd ${GMP_VERSION} ; \
+	 $(call find-package-srcdir, ${GMP_VERSION})/configure \
+	  $(GMP_CONFIG_ARGS)) && \
+	$(STAMP) $@
+stmp-build-host-gmp: stmp-config-host-gmp
+	($(canadian_env) \
+	 $(MAKE) -C ${GMP_VERSION}) && $(STAMP) $@
+build-host-gmp: stmp-build-host-gmp
+# Need -j1 to avoid a race condition in building on OS X.
+ifeq ($(HAVE_GMP),no)
+stmp-install-host-gmp: stmp-build-host-gmp
+	$(MAKE) -C ${GMP_VERSION} install -j1 && $(STAMP) $@
+else
+stmp-install-host-gmp:
+endif
+install-host-gmp: stmp-install-host-gmp
+# host mpfr rules
+.PHONY: config-host-mpfr build-host-mpfr install-host-mpfr
+config-host-mpfr: stmp-config-host-mpfr
+MPFR_CONFIG_ARGS=$(host_baseargs) --prefix=$(TEMP_INSTALLDIR) --disable-shared \
+	  --host=${cur_host} --build=${cur_build} \
+	  --with-gmp=$(GMP_DIR)
+stmp-config-host-mpfr: config.status stmp-install-host-gmp
+	([ -d ${MPFR_VERSION} ] || \
+	  mkdir ${MPFR_VERSION}) && \
+	($(canadian_env) \
+	 cd ${MPFR_VERSION} ; \
+	 $(call find-package-srcdir, ${MPFR_VERSION})/configure \
+	  $(MPFR_CONFIG_ARGS)) && \
+	$(STAMP) $@
+stmp-build-host-mpfr: stmp-config-host-mpfr
+	($(canadian_env) \
+	 $(MAKE) -C ${MPFR_VERSION}) && $(STAMP) $@
+build-host-mpfr: stmp-build-host-mpfr
+ifeq ($(HAVE_MPFR),no)
+stmp-install-host-mpfr: stmp-build-host-mpfr
+	$(MAKE) -C ${MPFR_VERSION} install && $(STAMP) $@
+else
+stmp-install-host-mpfr:
+endif
+install-host-mpfr: stmp-install-host-mpfr
+# host mpc rules
+.PHONY: config-host-mpc build-host-mpc install-host-mpc
+config-host-mpc: stmp-config-host-mpc
+MPC_CONFIG_ARGS=$(host_baseargs) --prefix=$(TEMP_INSTALLDIR) --disable-shared \
+	 --host=${cur_host} --build=${cur_build} \
+	 --with-gmp=$(GMP_DIR) --with-mpfr=$(MPFR_DIR)
+stmp-config-host-mpc: config.status stmp-install-host-gmp stmp-install-host-mpfr
+	([ -d ${MPC_VERSION} ] || \
+	  mkdir ${MPC_VERSION}) && \
+	($(canadian_env) \
+	 cd ${MPC_VERSION} ; \
+	 $(call find-package-srcdir, ${MPC_VERSION})/configure \
+	  $(MPC_CONFIG_ARGS)) && \
+	$(STAMP) $@
+stmp-build-host-mpc: stmp-config-host-mpc
+	($(canadian_env) \
+	 $(MAKE) -C ${MPC_VERSION}) && $(STAMP) $@
+build-host-mpc: stmp-build-host-mpc
+ifeq ($(HAVE_MPC),no)
+stmp-install-host-mpc: stmp-build-host-mpc
+	$(MAKE) -C ${MPC_VERSION} install && $(STAMP) $@
+else
+stmp-install-host-mpc:
+endif
+install-host-mpc: stmp-install-host-mpc
+# host ppl rules
+.PHONY: config-host-ppl build-host-ppl install-host-ppl
+config-host-ppl: stmp-config-host-ppl
+PPL_CONFIG_ARGS=$(host_baseargs) --prefix=$(TEMP_INSTALLDIR) --disable-shared \
+	  --target=${target_alias} \
+	  --host=${host} --build=${build} \
+	  --disable-nls \
+	  --disable-watchdog --without-java \
+	  --disable-ppl_lcdd --disable-ppl_lpsol --disable-ppl_pips
+stmp-config-host-ppl: config.status stmp-install-host-gmp
+	([ -d ${PPL_VERSION} ] || \
+	 mkdir ${PPL_VERSION}) && \
+	($(canadian_env) \
+	 cd ${PPL_VERSION} ; \
+         export CFLAGS="${CFLAGS} -I$(GMP_DIR)/include" ; \
+         export CXXFLAGS="${CFLAGS} -I$(GMP_DIR)/include" ; \
+         export LDFLAGS="${LDFLAGS} -L$(GMP_DIR)/lib" ; \
+	$(call find-package-srcdir, ${PPL_VERSION})/configure \
+	 $(PPL_CONFIG_ARGS)) && \
+	$(STAMP) $@
+stmp-build-host-ppl: stmp-config-host-ppl
+	$(MAKE) -C ${PPL_VERSION} && $(STAMP) $@
+build-host-ppl: stmp-build-host-ppl
+ifeq ($(ENABLE_GRAPHITE),yes)
+stmp-install-host-ppl: stmp-build-host-ppl
+	$(MAKE) -C ${PPL_VERSION} install && \
+	$(STAMP) $@
+else
+stmp-install-host-ppl:
+	$(STAMP) $@
+endif
+install-host-ppl: stmp-install-host-ppl
+# host isl rules
+.PHONY: config-host-isl build-host-isl install-host-isl
+config-host-isl: stmp-config-host-isl
+ISL_CONFIG_ARGS=$(host_baseargs) --prefix=$(TEMP_INSTALLDIR) --disable-shared \
+	  --target=${target_alias} \
+	  --host=${host} --build=${build} \
+	  --disable-nls
+stmp-config-host-isl: config.status stmp-install-host-gmp
+	([ -d ${ISL_VERSION} ] || \
+	 mkdir ${ISL_VERSION}) && \
+	($(canadian_env) \
+	 cd ${ISL_VERSION} ; \
+         export CFLAGS="${CFLAGS} -I$(GMP_DIR)/include" ; \
+         export CXXFLAGS="${CFLAGS} -I$(GMP_DIR)/include" ; \
+         export LDFLAGS="${LDFLAGS} -L$(GMP_DIR)/lib" ; \
+	$(call find-package-srcdir, ${ISL_VERSION})/configure \
+	 $(ISL_CONFIG_ARGS)) && \
+	$(STAMP) $@
+stmp-build-host-isl: stmp-config-host-isl
+	$(MAKE) -C ${ISL_VERSION} && $(STAMP) $@
+build-host-isl: stmp-build-host-isl
+ifeq ($(ENABLE_GRAPHITE)$(GCC_MIN_VERSION_4_8_0),yesyes)
+stmp-install-host-isl: stmp-build-host-isl
+	$(MAKE) -C ${ISL_VERSION} install && \
+	$(STAMP) $@
+else
+stmp-install-host-isl:
+	$(STAMP) $@
+endif
+install-host-isl: stmp-install-host-isl
+# host cloog rules
+.PHONY: config-host-cloog build-host-cloog install-host-cloog
+config-host-cloog: stmp-config-host-cloog
+CLOOG_CONFIG_ARGS=$(host_baseargs) --prefix=$(TEMP_INSTALLDIR) --disable-shared \
+	  --target=${target_alias} \
+	  --host=${host} --build=${build} \
+	  --disable-nls
+# for cloog-ppl version 0.15.x, ppl is required.
+ifneq ($(findstring ppl-,$(CLOOG_VERSION)),)
+CLOOG_TARGET = libcloog.la
+stmp-config-host-cloog: config.status stmp-install-host-ppl \
+	  stmp-install-host-ppl-workaround
+stmp-install-host-ppl-workaround:
+	sed -i -e 's/PPL_VERSION_MINOR 11/PPL_VERSION_MINOR 10/' \
+	  $(PPL_DIR)/include/ppl_c.h
+	$(STAMP) $@
+CLOOG_CONFIG_ARGS+= --with-gmp=$(GMP_DIR) --with-ppl=$(PPL_DIR)
+else
+CLOOG_TARGET = libcloog-isl.la
+CLOOG_CONFIG_ARGS+= --with-gmp-prefix=$(GMP_DIR)
+endif
+stmp-config-host-cloog: config.status stmp-install-host-gmp
+	([ -d ${CLOOG_VERSION} ] || \
+	 mkdir ${CLOOG_VERSION}) && \
+	($(canadian_env) \
+	 cd ${CLOOG_VERSION} ; \
+	$(call find-package-srcdir, ${CLOOG_VERSION})/configure \
+	 $(CLOOG_CONFIG_ARGS)) && \
+	$(STAMP) $@
+stmp-build-host-cloog: stmp-config-host-cloog
+	# Ignore the generation of cloog utilities
+	$(MAKE) -C ${CLOOG_VERSION} $(CLOOG_TARGET) && \
+	$(STAMP) $@
+build-host-cloog: stmp-build-host-cloog
+ifeq ($(ENABLE_GRAPHITE)$(GCC_POST_VERSION_4_X),yesno)
+stmp-install-host-cloog: stmp-build-host-cloog
+	$(MAKE) -C ${CLOOG_VERSION} install-libLTLIBRARIES \
+		install-pkgincludeHEADERS
+ifeq ($(findstring ppl-,$(CLOOG_VERSION)),)
+	$(MAKE) -C ${CLOOG_VERSION}/isl install-libLTLIBRARIES \
+		install-pkgincludeHEADERS
+endif
+ifeq ($(GCC_MIN_VERSION_4_8_0),yes)
+	$(MAKE) -C ${CLOOG_VERSION} install
+endif
+	$(STAMP) $@
+else
+stmp-install-host-cloog:
+	$(STAMP) $@
+endif
+install-host-cloog: stmp-install-host-cloog
+# host expat rules
+.PHONY: config-host-expat build-host-expat install-host-expat
+config-host-expat: stmp-config-host-expat
+EXPAT_CONFIG_ARGS=$(host_baseargs) --prefix=$(TEMP_INSTALLDIR) --disable-shared \
+	--host=${cur_host} --build=${cur_build}
+stmp-config-host-expat: config.status  $(canadian_stmp)
+	([ -d ${EXPAT_VERSION} ] || \
+	  mkdir ${EXPAT_VERSION}) && \
+	($(canadian_env) \
+	 cd ${EXPAT_VERSION} ; \
+	 $(call find-package-srcdir, ${EXPAT_VERSION})/configure \
+	  $(EXPAT_CONFIG_ARGS)) && \
+	$(STAMP) $@
+stmp-build-host-expat: stmp-config-host-expat
+	($(canadian_env) \
+	 $(MAKE) -C ${EXPAT_VERSION}) && $(STAMP) $@
+build-host-expat: stmp_build-host-expat
+ifeq ($(HAVE_EXPAT),no)
+stmp-install-host-expat: stmp-build-host-expat
+	$(MAKE) -C ${EXPAT_VERSION} install -j1 && $(STAMP) $@
+else
+stmp-install-host-expat:
+endif
+install-host-expat: stmp-install-host-expat
+# target gdb rules
+.PHONY: config-target-gdb build-target-gdb install-target-gdb
+ifeq ($(GDB_VERSION),gdb-none)
+config-target-gdb:
+build-target-gdb:
+install-target-gdb:
+else
+config-target-gdb: stmp-config-target-gdb
+GDB_CONFIG_ARGS=$(host_baseargs) --prefix=$(prefix) \
+	--target=$(GDB_TARGET) --host=${cur_host} --build=${cur_build} \
+	$(WITH_PYTHON) --disable-nls
+# For gdb versions 7.2 and higher, expat is required.
+ifeq ($(GDB_MIN_VERSION_7_2),yes)
+stmp-config-target-gdb: stmp-install-host-expat
+GDB_CONFIG_ARGS += --with-expat --with-libexpat-prefix=$(EXPAT_DIR)
+endif
+stmp-config-target-gdb: config.status $(canadian_stmp)
+	([ -d ${GDB_VERSION} ] || \
+	  mkdir ${GDB_VERSION}) && \
+	($(canadian_env) \
+	 cd ${GDB_VERSION} ; \
+	 $(call find-package-srcdir, ${GDB_VERSION})/configure \
+	  $(GDB_CONFIG_ARGS)) && \
+	$(STAMP) $@
+build-target-gdb: stmp-build-target-gdb
+stmp-build-target-gdb: stmp-config-target-gdb install-target-binutils
+	($(canadian_env) \
+	 $(MAKE) -C ${GDB_VERSION}) && $(STAMP) $@
+install-target-gdb: stmp-build-target-gdb
+	($(canadian_env) \
+	 $(MAKE) -C ${GDB_VERSION} install)
+endif
+# clean rules
+.PHONY: clean
+clean:
+	$(RM) -r $(TEMP_INSTALLDIR) stmp-build-* stmp-install-* && \
+	for sub in [ * ]; do \
+	  if [ -f $$sub/Makefile ]; then \
+	    $(MAKE) -C $$sub clean ; \
+	  fi; \
+	done
+.PHONY: distclean
+distclean:
+	@$(RM) -r config.log config.status \
+		  $(TEMP_INSTALLDIR) temp-src \
+		  stmp-config-* stmp-build-* stmp-install-* && \
+	for sub in [ * ]; do \
+	  if [ -f $$sub/config.status ]; then \
+	    echo "Deleting " $$sub "..." && $(RM) -r $$sub ; \
+	  fi; \
+	done
+	@$(RM) Makefile
