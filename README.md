@@ -1,8 +1,9 @@
 # Android Operating-System
-> Developer: Google
-> Family: Linux
-> Update method: over the air
-> Kernel: Monolithic
+> Experience the future first on Android.
+- Developer: Google
+- Family: Linux
+- Update method: over the air
+- Kernel: Monolithic
 
 [Official Site](https://www.android.com/)
 
