@@ -1,7 +1,17 @@
 # Android Operating-System
+> Developer: Google
+> Family: Linux
+> Update method: over the air
+> Kernel: Monolithic
 
-## Android was first created by Android Inc., 
-a Silicon Valley startup that Google bought in 2005. 
+[Official Site](https://www.android.com/)
+
+# Android Open Source Project (AOSP)
+is the open-source software stack and foundational codebase for the Android operating system, led and maintained by Google. 
+It provides the core framework, system services, and Linux kernel required to build mobile devices.
+
+## Android was first created by Android Inc.
+A Silicon Valley startup that Google bought in 2005. 
 When Google made this purchase, many people wondered what the company planned to do in mobile computing, 
 especially since Google depended on desktop search ads.
 
