@@ -1,0 +1,113 @@
+#include "ipa_nat_drv.h"
+#include "ipa_nat_drvi.h"
+
+int ipa_nat_add_ipv4_tbl(uint32_t public_ip_addr,	uint16_t number_of_entries, uint32_t *tbl_hdl)
+{
+  int ret;
+  if (NULL == tbl_hdl || 0 == number_of_entries) 
+  {
+    IPAERR("Invalid parameters \n");
+    return -EINVAL;
+  }
+  ret = ipa_nati_add_ipv4_tbl(public_ip_addr,	number_of_entries, tbl_hdl);
+  
+  if (ret != 0) 
+  {
+    IPAERR("unable to add table \n");
+    return -EINVAL;
+  }
+  IPADBG("Returning table handle 0x%x\n", *tbl_hdl);
+  return ret;
+} 
+
+int ipa_nat_del_ipv4_tbl(uint32_t tbl_hdl)
+{
+  if (IPA_NAT_INVALID_NAT_ENTRY == tbl_hdl ||
+      tbl_hdl > IPA_NAT_MAX_IP4_TBLS) 
+  {
+    IPAERR("invalid table handle passed \n");
+    return -EINVAL;
+  }
+  IPADBG("Passed Table Handle: 0x%x\n", tbl_hdl);
+  return ipa_nati_del_ipv4_table(tbl_hdl);
+}
+
+int ipa_nat_add_ipv4_rule(uint32_t tbl_hdl,
+		const ipa_nat_ipv4_rule *clnt_rule,	uint32_t *rule_hdl)
+{
+  int result = -EINVAL;
+  if (IPA_NAT_INVALID_NAT_ENTRY == tbl_hdl ||
+      tbl_hdl > IPA_NAT_MAX_IP4_TBLS || 
+    NULL == rule_hdl ||
+      NULL == clnt_rule) 
+  {
+    IPAERR("invalide table handle passed \n");
+    return result;
+  }
+  IPADBG("Passed Table handle: 0x%x\n", tbl_hdl);
+  
+  if (ipa_nati_add_ipv4_rule(tbl_hdl, clnt_rule, rule_hdl) != 0) 
+  {
+		return result;
+	}
+  IPADBG("returning rule handle 0x%x\n", *rule_hdl);
+  return 0;
+}
+
+int ipa_nat_del_ipv4_rule(uint32_t tbl_hdl,
+		uint32_t rule_hdl)
+{
+  int result = -EINVAL;
+  if (IPA_NAT_INVALID_NAT_ENTRY == tbl_hdl ||
+      IPA_NAT_INVALID_NAT_ENTRY == rule_hdl) 
+  {
+    IPAERR("invalide parameters\n");
+    return result;
+  }
+  IPADBG("Passed Table: 0x%x and rule handle 0x%x\n", tbl_hdl, rule_hdl);
+  result = ipa_nati_del_ipv4_rule(tbl_hdl, rule_hdl);
+  
+  if (result) 
+  {
+    IPAERR("unable to delete rule from hw \n");
+    return result;
+  }
+  return 0;
+}
+
+int ipa_nat_query_timestamp(uint32_t  tbl_hdl,
+		uint32_t  rule_hdl,
+		uint32_t  *time_stamp)
+{
+  if (0 == tbl_hdl || tbl_hdl > IPA_NAT_MAX_IP4_TBLS ||
+      NULL == time_stamp) {
+    IPAERR("invalid parameters passed \n");
+    return -EINVAL;
+  }
+  IPADBG("Passed Table: 0x%x and rule handle 0x%x\n", tbl_hdl, rule_hdl);
+  return ipa_nati_query_timestamp(tbl_hdl, rule_hdl, time_stamp);
+}
+
+int ipa_nat_modify_pdn(uint32_t  tbl_hdl,
+	uint8_t pdn_index,	ipa_nat_pdn_entry *pdn_info)
+
+{
+	struct ipa_ioc_nat_pdn_entry pdn_data;
+	if (0 == tbl_hdl || tbl_hdl > IPA_NAT_MAX_IP4_TBLS) {
+		IPAERR("invalid parameters passed \n");
+		return -EINVAL;
+	}
+	if (!pdn_info) {
+		IPAERR("pdn_info is NULL \n");
+		return -EINVAL;
+	}
+	if (pdn_index > IPA_MAX_PDN_NUM) {
+		IPAERR("PDN index is out of range %d", pdn_index);
+		return -EINVAL;
+	}
+	pdn_data.pdn_index = pdn_index;
+	pdn_data.public_ip = pdn_info->public_ip;
+	pdn_data.src_metadata = pdn_info->src_metadata;
+	pdn_data.dst_metadata = pdn_info->dst_metadata;
+	return ipa_nati_modify_pdn(&pdn_data);
+}
