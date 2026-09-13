@@ -25,11 +25,21 @@ typedef struct __posix_spawnattr* posix_spawnattr_t;
 typedef struct __posix_spawn_file_actions* posix_spawn_file_actions_t;
 #if __ANDROID_API__ >= 28
 
-int posix_spawn(pid_t* __pid, const char* __path, const posix_spawn_file_actions_t* __actions, 
-const posix_spawnattr_t* __attr, char* const __argv[], char* const __env[]) __INTRODUCED_IN(28);
+int posix_spawn(pid_t* __pid, 
+  const char* __path, 
+    const posix_spawn_file_actions_t* __actions, 
 
-int posix_spawnp(pid_t* __pid, const char* __file, const posix_spawn_file_actions_t* __actions, 
-const posix_spawnattr_t* __attr, char* const __argv[], char* const __env[]) __INTRODUCED_IN(28);
+const posix_spawnattr_t* __attr, 
+  char* const __argv[], 
+    char* const __env[]) __INTRODUCED_IN(28);
+
+int posix_spawnp(pid_t* __pid, 
+  const char* __file, 
+    const posix_spawn_file_actions_t* __actions, 
+
+const posix_spawnattr_t* __attr, 
+  char* const __argv[], 
+    char* const __env[]) __INTRODUCED_IN(28);
 
 int posix_spawnattr_init(posix_spawnattr_t* __attr) __INTRODUCED_IN(28);
 int posix_spawnattr_destroy(posix_spawnattr_t* __attr) __INTRODUCED_IN(28);
