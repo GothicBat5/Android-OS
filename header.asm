@@ -4,14 +4,11 @@
 	.macro	efi_signature_nop
 #ifdef CONFIG_EFI
 .L_head:
-
-	ccmp	x18, #0, #0xd, pl
+	ccmp x18, #0, #0xd, pl
 #else
-
 	nop
 #endif
 	.endm
-
 	.macro	__EFI_PE_HEADER
 #ifdef CONFIG_EFI
 	.set	.Lpe_header_offset, . - .L_head
