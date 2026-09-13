@@ -167,11 +167,14 @@ static bool __init obsolete_checksetup(char *line)
 			if (p->early) {
 				if (line[n] == '\0' || line[n] == '=')
 					had_early_param = true;
-			} else if (!p->setup_func) {
+			} 
+			else if (!p->setup_func) 
+			{
 				pr_warn("Parameter %s is obsolete, ignored\n",
 					p->str);
 				return true;
-			} else if (p->setup_func(line + n))
+			} 
+			else if (p->setup_func(line + n))
 				return true;
 		}
 		p++;
@@ -180,10 +183,10 @@ static bool __init obsolete_checksetup(char *line)
 	return had_early_param;
 }
 
-/*
- * This should be approx 2 Bo*oMips to start (note initial shift), and will
- * still work even if initially too large, it will just take slightly longer
- */
+
+ //This should be approx 2 Bo*oMips to start (note initial shift), and will
+  //still work even if initially too large, it will just take slightly longer
+
 unsigned long loops_per_jiffy = (1<<12);
 EXPORT_SYMBOL(loops_per_jiffy);
 
@@ -211,7 +214,8 @@ static int __init loglevel(char *str)
 	 * to prevent blind crashes (when loglevel being set to 0) that
 	 * are quite hard to debug
 	 */
-	if (get_option(&str, &newlevel)) {
+	if (get_option(&str, &newlevel)) 
+	{
 		console_loglevel = newlevel;
 		return 0;
 	}
@@ -250,13 +254,14 @@ found:
 	csum = get_unaligned_le32(hdr + 4);
 
 	data = ((void *)hdr) - size;
-	if ((unsigned long)data < initrd_start) {
-		pr_err("bootconfig size %d is greater than initrd size %ld\n",
-			size, initrd_end - initrd_start);
+	if ((unsigned long)data < initrd_start) 
+	{
+		pr_err("bootconfig size %d is greater than initrd size %ld\n", size, initrd_end - initrd_start);
 		return NULL;
 	}
 
-	if (xbc_calc_checksum(data, size) != csum) {
+	if (xbc_calc_checksum(data, size) != csum) 
+	{
 		pr_err("bootconfig checksum failed\n");
 		return NULL;
 	}
@@ -471,7 +476,8 @@ static int __init unknown_bootoption(char *param, char *val,
 	repair_env_string(param, val);
 
 	/* Handle bootloader identifier */
-	for (int i = 0; bootloader[i]; i++) {
+	for (int i = 0; bootloader[i]; i++) 
+	{
 		if (strstarts(param, bootloader[i]))
 			return 0;
 	}
@@ -490,8 +496,10 @@ static int __init unknown_bootoption(char *param, char *val,
 	if (val) {
 		/* Environment option */
 		unsigned int i;
-		for (i = 0; envp_init[i]; i++) {
-			if (i == MAX_INIT_ENVS) {
+		for (i = 0; envp_init[i]; i++) 
+		{
+			if (i == MAX_INIT_ENVS) 
+			{
 				panic_later = "env";
 				panic_param = param;
 			}
@@ -627,8 +635,7 @@ static int __init do_early_param(char *param, char *val,
 
 void __init parse_early_options(char *cmdline)
 {
-	parse_args("early options", cmdline, NULL, 0, 0, 0, NULL,
-		   do_early_param);
+	parse_args("early options", cmdline, NULL, 0, 0, 0, NULL, do_early_param);
 }
 
 /* Arch code calls this early on, or if not, just before other parsing. */
@@ -637,8 +644,7 @@ void __init parse_early_param(void)
 	static int done __initdata;
 	static char tmp_cmdline[COMMAND_LINE_SIZE] __initdata;
 
-	if (done)
-		return;
+	if (done) return;
 
 	/* All fall through to do_early_param. */
 	strscpy(tmp_cmdline, boot_command_line, COMMAND_LINE_SIZE);
@@ -650,15 +656,18 @@ void __init __weak arch_post_acpi_subsys_init(void) { }
 
 void __init __weak smp_setup_processor_id(void)
 {
+	
 }
 
 void __init __weak smp_prepare_boot_cpu(void)
 {
+	
 }
 
 # if THREAD_SIZE >= PAGE_SIZE
 void __init __weak thread_stack_cache_init(void)
 {
+	
 }
 #endif
 
@@ -680,8 +689,7 @@ static inline void initcall_debug_enable(void)
 #endif
 
 #ifdef CONFIG_RANDOMIZE_KSTACK_OFFSET
-DEFINE_STATIC_KEY_MAYBE_RO(CONFIG_RANDOMIZE_KSTACK_OFFSET_DEFAULT,
-			   randomize_kstack_offset);
+DEFINE_STATIC_KEY_MAYBE_RO(CONFIG_RANDOMIZE_KSTACK_OFFSET_DEFAULT, randomize_kstack_offset);
 DEFINE_PER_CPU(struct rnd_state, kstack_rnd_state);
 
 static int __init random_kstack_init(void)
